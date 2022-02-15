@@ -43,6 +43,8 @@ import android.text.TextUtils;
 import android.util.ArrayMap;
 import android.util.Log;
 
+import com.android.launcher3.p404.icon.IconPack;
+import com.android.launcher3.p404.icon.providers.IconPackProvider;
 import com.android.launcher3.icons.ThemedIconDrawable.ThemeData;
 import com.android.launcher3.util.SafeCloseable;
 
@@ -168,7 +170,11 @@ public class IconProvider {
             td = new ThemeData(mContext.getResources(), icon);
         }
 
-        return td != null ? td.wrapDrawable(icon, iconType) : icon;
+        icon = getFromIconPack(icon, packageName);
+        if (icon != null) {
+            icon = td.wrapDrawable(icon, iconType);
+        }
+        return icon;
     }
 
     private Drawable loadActivityInfoIcon(ActivityInfo ai, int density) {
@@ -378,5 +384,15 @@ public class IconProvider {
          * Called when the global icon state changed, which can typically affect all icons
          */
         void onSystemIconStateChanged(String iconState);
+    }
+
+    private Drawable getFromIconPack(Drawable icon, String packageName) {
+        final IconPack iconPack = IconPackProvider.loadAndGetIconPack(mContext);
+        if (iconPack == null) {
+            return null;
+        }
+
+        final Drawable iconMask = iconPack.getIcon(packageName, null, "");
+        return iconMask == null ? icon : iconMask;
     }
 }
